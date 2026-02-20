@@ -87,8 +87,11 @@ function createCalculatorHTML(id) {
 
         <div class="row">
             <div class="grid">
-                <div><label>S / H / C Wax</label><div style="display:flex;gap:2px;">
-                    <input type="number" id="nS_${id}" value="0" min="0"><input type="number" id="nH_${id}" value="0" min="0"><input type="number" id="nC_${id}" value="0" min="0">
+                <div><label>S / H / C / Debug Wax</label><div style="display:flex;gap:2px;">
+                    <input type="number" id="nS_${id}" placeholder="S" value="0" min="0">
+                    <input type="number" id="nH_${id}" placeholder="H" value="0" min="0">
+                    <input type="number" id="nC_${id}" placeholder="C" value="0" min="0">
+                    <input type="number" id="nD_${id}" placeholder="D" value="0" min="0">
                 </div></div>
                 <div><label>Attr Count</label>
                     <select id="attr_count_${id}" onchange="renderAttrInputs(${id})">
@@ -196,7 +199,9 @@ function calc(id) {
     const pot = parseFloat(document.getElementById(`pot_${id}`).value);
     const nS = parseInt(document.getElementById(`nS_${id}`).value)||0, 
           nH = parseInt(document.getElementById(`nH_${id}`).value)||0, 
-          nC = parseInt(document.getElementById(`nC_${id}`).value)||0;
+          nC = parseInt(document.getElementById(`nC_${id}`).value)||0,
+          nD = parseInt(document.getElementById(`nD_${id}`).value)||0; // Debug Wax
+
     const unitCost = parseFloat(document.getElementById(`unit_cost_${id}`).value)||0;
     const attrCount = parseInt(document.getElementById(`attr_count_${id}`).value);
 
@@ -207,60 +212,60 @@ function calc(id) {
         let p = rMin + (pot/5)*(rMax - rMin);
         let tar = parseFloat(document.getElementById(`tar_${i}_${id}`).value);
         let useB = document.getElementById(`useBias${i}_${id}`).checked;
-        let inc = useB ? (2*1 + 1*parseFloat(document.getElementById(`bias${i}_${id}`).value))/(1+parseFloat(document.getElementById(`bias${i}_${id}`).value)) : parseFloat(document.getElementById(`fixedUp${i}_${id}`).value);
+        
+        // Calculate average increment
+        let inc = 1;
+        if(useB) {
+            let bias = parseFloat(document.getElementById(`bias${i}_${id}`).value);
+            let upB = parseFloat(document.getElementById(`upB${i}_${id}`).value);
+            let upA = parseFloat(document.getElementById(`upA${i}_${id}`).value);
+            let probLucky = (1 + pot * (bias-1)/10) / (bias + 1);
+            inc = (upA * probLucky) + (upB * (1 - probLucky));
+        } else {
+            inc = parseFloat(document.getElementById(`fixedUp${i}_${id}`).value);
+        }
+
         attrs.push({ id: i, p: p, hitsNeeded: Math.ceil(tar/inc), isC: document.getElementById(`isC${i}_${id}`).checked, avgInc: inc });
     }
 
-    let hardDist = {0: 1.0};
-    for(let i=0; i<nH; i++){
-        let tmp = {};
-        for(let c in hardDist){ let n = parseInt(c); tmp[n+2] = (tmp[n+2]||0) + hardDist[c]*0.6; tmp[n] = (tmp[n]||0) + hardDist[c]*0.4; }
-        hardDist = tmp;
-    }
-
-    let survivalProb = Math.pow(0.25, nC);
-    let cMax = nC * 4;
-    let maxTotal = nS + nH*2 + cMax;
+    // Pool Logic: S=1, H=2, C=4, Debug=4
+    // We treat D as part of the Caustic pool
+    let causticPool = (nC + nD) * 4;
+    let totalPool = nS + nH * 2 + causticPool;
+    
     let jointTotalProb = 0;
-    let singleAttrRowProbs = Array(maxTotal + 1).fill(0).map(() => Array(attrCount).fill(0));
+    let singleAttrRowProbs = Array(totalPool + 1).fill(0).map(() => Array(attrCount).fill(0));
 
-    for (let extra in hardDist) {
-        let nExtra = parseInt(extra);
-        let hWeight = hardDist[extra];
-        let totalPool = nS + nExtra + cMax;
+    // Simple probability distribution (Binomial Approximation for each k)
+    // To maintain your "metAll" and "singleAttrRowProbs" structure:
+    for (let k1 = 0; k1 <= totalPool; k1++) {
+        if (attrs[0].isC && k1 > causticPool) continue;
+        for (let k2 = 0; k2 <= (attrCount >= 2 ? totalPool - k1 : 0); k2++) {
+            if (attrCount >= 2 && attrs[1].isC && k2 > causticPool) continue;
+            for (let k3 = 0; k3 <= (attrCount >= 3 ? totalPool - k1 - k2 : 0); k3++) {
+                if (attrCount >= 3 && attrs[2].isC && k3 > causticPool) continue;
 
-        // 生成所有可能的名額分配 (k1, k2, k3, kFail)
-        for (let k1 = 0; k1 <= totalPool; k1++) {
-            if (attrs[0].isC && k1 > cMax) continue;
-            for (let k2 = 0; k2 <= (attrCount >= 2 ? totalPool - k1 : 0); k2++) {
-                if (attrCount >= 2 && attrs[1].isC && k2 > cMax) continue;
-                for (let k3 = 0; k3 <= (attrCount >= 3 ? totalPool - k1 - k2 : 0); k3++) {
-                    if (attrCount >= 3 && attrs[2].isC && k3 > cMax) continue;
+                let kFail = totalPool - k1 - k2 - k3;
+                let k_arr = [k1]; if(attrCount>=2) k_arr.push(k2); if(attrCount>=3) k_arr.push(k3); k_arr.push(kFail);
+                let p_arr = [attrs[0].p]; if(attrCount>=2) p_arr.push(attrs[1].p); if(attrCount>=3) p_arr.push(attrs[2].p);
+                let sumP = p_arr.reduce((a,b)=>a+b, 0);
+                p_arr.push(Math.max(0, 1 - sumP));
 
-                    let kFail = totalPool - k1 - k2 - k3;
-                    let k_arr = [k1]; if(attrCount>=2) k_arr.push(k2); if(attrCount>=3) k_arr.push(k3); k_arr.push(kFail);
-                    let p_arr = [attrs[0].p]; if(attrCount>=2) p_arr.push(attrs[1].p); if(attrCount>=3) p_arr.push(attrs[2].p);
-                    let sumP = p_arr.reduce((a,b)=>a+b, 0);
-                    p_arr.push(Math.max(0, 1 - sumP));
+                let pCombo = getMultinomial(totalPool, k_arr, p_arr);
+                
+                if (k1 > 0) for(let t=1; t<=k1; t++) if(t <= totalPool) singleAttrRowProbs[t][0] += pCombo;
+                if (attrCount>=2 && k2 > 0) for(let t=1; t<=k2; t++) if(t <= totalPool) singleAttrRowProbs[t][1] += pCombo;
+                if (attrCount>=3 && k3 > 0) for(let t=1; t<=k3; t++) if(t <= totalPool) singleAttrRowProbs[t][2] += pCombo;
 
-                    let pCombo = getMultinomial(totalPool, k_arr, p_arr) * hWeight * survivalProb;
-                    
-                    // 統計單屬性機率
-                    if (k1 > 0) for(let t=1; t<=k1; t++) singleAttrRowProbs[t][0] += pCombo;
-                    if (attrCount>=2 && k2 > 0) for(let t=1; t<=k2; t++) singleAttrRowProbs[t][1] += pCombo;
-                    if (attrCount>=3 && k3 > 0) for(let t=1; t<=k3; t++) singleAttrRowProbs[t][2] += pCombo;
-
-                    // 統計綜合機率
-                    let metAll = (k1 >= attrs[0].hitsNeeded);
-                    if(attrCount>=2) metAll = metAll && (k2 >= attrs[1].hitsNeeded);
-                    if(attrCount>=3) metAll = metAll && (k3 >= attrs[2].hitsNeeded);
-                    if(metAll) jointTotalProb += pCombo;
-                }
+                let metAll = (k1 >= attrs[0].hitsNeeded);
+                if(attrCount>=2) metAll = metAll && (k2 >= attrs[1].hitsNeeded);
+                if(attrCount>=3) metAll = metAll && (k3 >= attrs[2].hitsNeeded);
+                if(metAll) jointTotalProb += pCombo;
             }
         }
     }
 
-    // 渲染綜合機率
+    // Render Joint Results (Using your original style)
     let jointHtml = `
         <div class="joint-res">
             <div style="font-size:11px; color:#f1c40f;">ALL TARGETS MET (Joint Prob)</div>
@@ -272,9 +277,9 @@ function calc(id) {
         </div>`;
     document.getElementById(`joint_container_${id}`).innerHTML = jointHtml;
 
-    // 渲染詳細成功列表
+    // Render Detailed Success List (Using your original style)
     let hitHtml = "";
-    for (let t = 1; t <= maxTotal; t++) {
+    for (let t = 1; t <= totalPool; t++) {
         let matched = attrs.filter(a => a.hitsNeeded === t);
         let lines = attrs.map((a, idx) => `
             <div class="attr-info-line">
