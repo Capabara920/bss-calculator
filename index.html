@@ -1,94 +1,45 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BSS 精準計算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSS Precision Calculator</title>
     <style>
-        body { 
-            font-family: sans-serif; 
-            background: #121212; 
-            color: #e0e0e0; 
-            padding: 20px; 
-            margin: 0;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-        
-        .top-bar { 
-            width: 95%; 
-            max-width: 1220px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 20px; 
-            margin-bottom: 25px;
-            background: #1e1e1e;
-            padding: 15px 25px;
-            border-radius: 12px;
-            border: 1px solid #333;
-        }
-
-        #main_wrapper { 
-            display: flex; 
-            flex-direction: row; 
-            flex-wrap: nowrap; 
-            gap: 25px; 
-            justify-content: center; 
-            width: 100%;
-            padding-bottom: 40px;
-            overflow-x: auto;
-        }
-
-        .container { 
-            flex: 0 0 600px; 
-            background: #1e1e1e; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
-            border: 1px solid #333; 
-            height: fit-content;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; padding: 10px; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .top-bar { width: 95%; max-width: 1220px; display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 25px; background: #1e1e1e; padding: 15px 25px; border-radius: 12px; border: 1px solid #333; box-sizing: border-box; }
+        #main_wrapper { display: flex; flex-direction: row; flex-wrap: wrap; gap: 25px; justify-content: center; width: 100%; padding-bottom: 40px; }
+        .container { flex: 0 1 600px; width: 100%; max-width: 600px; background: #1e1e1e; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); border: 1px solid #333; height: fit-content; box-sizing: border-box; }
         .row { margin-bottom: 18px; }
         .section-title { font-size: 11px; color: #2196f3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; font-weight: bold; }
         .section-title::after { content: ""; flex: 1; height: 1px; background: #333; margin-left: 10px; }
-        
         label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; }
         input, select { width: 100%; padding: 10px; background: #252525; border: 1px solid #333; border-radius: 4px; color: #fff; font-size: 13px; box-sizing: border-box; }
         .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        
         .attr-card { background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
         .attr-card.a1 { border-top: 3px solid #2196f3; }
         .attr-card.a2 { border-top: 3px solid #4caf50; }
         .attr-card.a3 { border-top: 3px solid #9c27b0; }
         .attr-label { position: absolute; top: -10px; left: 10px; background: #1e1e1e; padding: 0 8px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
-        button { padding: 12px; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        button { padding: 12px; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        button:hover { opacity: 0.8; }
         .btn-calc { background: #2196f3; }
         .btn-reset { background: #444; }
         .btn-mode { background: #673ab7; }
-
         .result-box { margin-top: 20px; display: none; }
         .res-section { background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444; }
-        
         .res-item { display: flex; flex-direction: column; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #333; position: relative; transition: 0.3s; }
         .target-highlight { border-color: #f1c40f !important; background: rgba(241, 196, 15, 0.08); }
-        
         .tag-container { position: absolute; top: -12px; left: 10px; display: flex; gap: 5px; }
         .line-tag { font-size: 10px; padding: 2px 10px; border-radius: 4px; font-weight: bold; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .tag-a1 { background: #2196f3; }
         .tag-a2 { background: #4caf50; }
         .tag-a3 { background: #9c27b0; }
-
         .res-main { display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
         .res-sub { font-size: 11px; color: #aaa; text-align: right; margin-top: 8px; line-height: 1.5; }
         .val { color: #4caf50; font-weight: bold; }
         .cost-val { color: #f1c40f; font-weight: bold; }
         .attr-info-line { font-size: 10px; color: #888; border-top: 1px solid #333; margin-top: 5px; padding-top: 5px; }
-
         .count-select { width: 70px; padding: 8px; background: #333; border: 1px solid #444; color: white; cursor: pointer; }
     </style>
 </head>
@@ -96,7 +47,7 @@
 
 <div class="top-bar">
     <div style="display:flex; flex-direction:column; gap:5px; align-items:center;">
-        <label>視窗數量</label>
+        <label>Windows</label>
         <select class="count-select" id="calc_count" onchange="initCalculators()">
             <option value="1">1</option>
             <option value="2">2</option>
@@ -114,7 +65,6 @@ function initCalculators() {
     const wrapper = document.getElementById('main_wrapper');
     wrapper.innerHTML = '';
     displayModes = {};
-
     for (let i = 1; i <= count; i++) {
         displayModes[i] = 0;
         wrapper.innerHTML += createCalculatorHTML(i);
@@ -125,35 +75,36 @@ function initCalculators() {
 function createCalculatorHTML(id) {
     return `
     <div class="container" id="calc_container_${id}">
-        <div class="section-title">全域潛力</div>
+        <div class="section-title">Global Potential</div>
         <div class="row">
-            <div class="grid" style="grid-template-columns: 1fr 2fr;">
-                <div><label>Potential (0-5)</label><input type="number" id="pot_${id}" step="0.1" value="5"></div>
+            <div style="width: 120px;">
+                <label>Potential (0-5)</label>
+                <input type="number" id="pot_${id}" step="0.5" value="5" min="0" max="5">
             </div>
         </div>
 
         <div class="row">
             <div class="grid">
-                <div><label>S / H / C 蠟</label><div style="display:flex;gap:2px;">
-                    <input type="number" id="nS_${id}" value="0"><input type="number" id="nH_${id}" value="0"><input type="number" id="nC_${id}" value="0">
+                <div><label>S / H / C Wax</label><div style="display:flex;gap:2px;">
+                    <input type="number" id="nS_${id}" value="0" min="0"><input type="number" id="nH_${id}" value="0" min="0"><input type="number" id="nC_${id}" value="0" min="0">
                 </div></div>
-                <div><label>單次成本</label><input type="number" id="unit_cost_${id}" value="0"></div>
-                <div><label>屬性個數</label>
+                <div><label>Attr Count</label>
                     <select id="attr_count_${id}" onchange="renderAttrInputs(${id})">
-                        <option value="1" selected>1 個屬性</option>
-                        <option value="2">2 個屬性</option>
-                        <option value="3">3 個屬性</option>
+                        <option value="1" selected>1 Attr</option>
+                        <option value="2">2 Attrs</option>
+                        <option value="3">3 Attrs</option>
                     </select>
                 </div>
+                <div><label>Unit Cost</label><input type="number" id="unit_cost_${id}" value="0" min="0"></div>
             </div>
         </div>
 
         <div id="attr_container_${id}"></div>
 
         <div class="btn-grid">
-            <button class="btn-calc" onclick="calc(${id})">分析複合目標</button>
-            <button id="modeBtn_${id}" class="btn-mode" onclick="toggleMode(${id})">模式: Full</button>
-            <button class="btn-reset" onclick="resetCalc(${id})">重置</button>
+            <button class="btn-calc" onclick="calc(${id})">Analyze Targets</button>
+            <button id="modeBtn_${id}" class="btn-mode" onclick="toggleMode(${id})">Mode: Full</button>
+            <button class="btn-reset" onclick="resetCalc(${id})">Reset</button>
         </div>
 
         <div id="res_${id}" class="result-box">
@@ -170,25 +121,25 @@ function renderAttrInputs(calcId) {
         container.innerHTML += `
         <div class="attr-card a${i}">
             <div class="attr-label" style="color:${['','#2196f3','#4caf50','#9c27b0'][i]}">
-                屬性 ${i}
+                Attr ${i}
                 <span><input type="checkbox" id="isC${i}_${calcId}" style="width:auto;"> C-Only</span>
                 <span><input type="checkbox" id="useBias${i}_${calcId}" style="width:auto;" onchange="toggleBiasView(${i}, ${calcId})"> Bias</span>
             </div>
             <div class="grid" style="grid-template-columns: 1.2fr 1fr;">
-                <div><label>機率 % (Min/Max)</label><div style="display:flex;gap:2px;">
-                    <input type="number" id="rollMin${i}_${calcId}" value="0" step="0.1"><input type="number" id="rollMax${i}_${calcId}" value="0" step="0.1">
+                <div><label>Chance % (Min/Max)</label><div style="display:flex;gap:2px;">
+                    <input type="number" id="rollMin${i}_${calcId}" value="0" step="0.1" min="0"><input type="number" id="rollMax${i}_${calcId}" value="0" step="0.1" min="0">
                 </div></div>
-                <div><label>目前 ➔ 目標</label><div style="display:flex;gap:2px;">
-                    <input type="number" id="cur${i}_${calcId}" value="0"><input type="number" id="tar${i}_${calcId}" value="0">
-                </div></div>
+                <div><label>Target Value (Remaining)</label>
+                    <input type="number" id="tar_${i}_${calcId}" value="1" min="0">
+                </div>
             </div>
             <div id="biasArea${i}_${calcId}" class="grid" style="margin-top:8px; display:none;">
-                <div><label>Bias 倍數</label><input type="number" id="bias${i}_${calcId}" value="0"></div>
-                <div><label>Bias (A)</label><input type="number" id="upA${i}_${calcId}" value="0"></div>
-                <div><label>常規 (B)</label><input type="number" id="upB${i}_${calcId}" value="0"></div>
+                <div><label>Bias</label><input type="number" id="bias${i}_${calcId}" value="2" min="0"></div>
+                <div><label>Bias Inc (upB)</label><input type="number" id="upB${i}_${calcId}" value="2" min="0"></div>
+                <div><label>Lucky Inc (upA)</label><input type="number" id="upA${i}_${calcId}" value="1" min="0"></div>
             </div>
             <div id="noBiasArea${i}_${calcId}" class="grid" style="margin-top:8px;">
-                <div style="grid-column: span 3;"><label>每次成功增量</label><input type="number" id="fixedUp${i}_${calcId}" value="1" step="0.1"></div>
+                <div style="grid-column: span 3;"><label>Success Increment</label><input type="number" id="fixedUp${i}_${calcId}" value="1" step="0.1" min="0"></div>
             </div>
         </div>`;
     }
@@ -202,15 +153,22 @@ function toggleBiasView(attrIdx, calcId) {
 
 function comb(n, k) {
     if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    if (k > n / 2) k = n - k;
     let r = 1;
-    for (let i = 1; i <= Math.min(k, n-k); i++) r = r * (n - i + 1) / i;
+    for (let i = 1; i <= k; i++) r = r * (n - i + 1) / i;
     return r;
 }
 
 function formatUnit(num) {
-    if (num < 10000) return Math.round(num).toLocaleString();
-    if (num < 100000000) return (num / 10000).toFixed(2) + " 萬";
-    return (num / 100000000).toFixed(3) + " 億";
+    if (num < 1000) return Math.round(num).toString();
+    const units = ["", "k", "m", "b", "t"];
+    let unitIdx = 0;
+    while (num >= 1000 && unitIdx < units.length - 1) {
+        num /= 1000;
+        unitIdx++;
+    }
+    return num.toFixed(num < 10 ? 2 : 1).replace(/\.0$/, "") + units[unitIdx];
 }
 
 function formatProb(p, calcId) {
@@ -235,17 +193,39 @@ function resetCalc(id) {
 
 function toggleMode(id) { 
     displayModes[id] = (displayModes[id] + 1) % 3; 
-    document.getElementById(`modeBtn_${id}`).innerText="模式: "+["Full","Auto","3-Dig"][displayModes[id]]; 
+    document.getElementById(`modeBtn_${id}`).innerText="Mode: "+["Full","Auto","3-Dig"][displayModes[id]]; 
     calc(id); 
 }
 
 function calc(id) {
-    const pot = parseFloat(document.getElementById(`pot_${id}`).value);
-    const nS = parseInt(document.getElementById(`nS_${id}`).value)||0, 
-          nH = parseInt(document.getElementById(`nH_${id}`).value)||0, 
-          nC = parseInt(document.getElementById(`nC_${id}`).value)||0;
-    const unitCost = parseFloat(document.getElementById(`unit_cost_${id}`).value)||0;
+    const pot = Math.max(0, parseFloat(document.getElementById(`pot_${id}`).value));
+    const nS = Math.max(0, parseInt(document.getElementById(`nS_${id}`).value)||0), 
+          nH = Math.max(0, parseInt(document.getElementById(`nH_${id}`).value)||0), 
+          nC = Math.max(0, parseInt(document.getElementById(`nC_${id}`).value)||0);
+    const unitCost = Math.max(0, parseFloat(document.getElementById(`unit_cost_${id}`).value)||0);
     const attrCount = parseInt(document.getElementById(`attr_count_${id}`).value);
+
+    let targets = {};
+    for(let i=1; i<=attrCount; i++) {
+        let rMin = Math.max(0, parseFloat(document.getElementById(`rollMin${i}_${id}`).value)/100), 
+            rMax = Math.max(0, parseFloat(document.getElementById(`rollMax${i}_${id}`).value)/100);
+        let pRoll = rMin + (pot/5)*(rMax - rMin);
+        let tarVal = Math.max(0, parseFloat(document.getElementById(`tar_${i}_${id}`).value));
+        let useBias = document.getElementById(`useBias${i}_${id}`).checked;
+        let isC = document.getElementById(`isC${i}_${id}`).checked;
+        let avgInc = 1;
+        if(useBias) {
+            let biasVal = Math.max(0, parseFloat(document.getElementById(`bias${i}_${id}`).value));
+            let upB = Math.max(0, parseFloat(document.getElementById(`upB${i}_${id}`).value)); // Bias (Weighted)
+            let upA = Math.max(0, parseFloat(document.getElementById(`upA${i}_${id}`).value)); // Lucky (Single)
+            // 邏輯維持：Bias 權重掛在 upB 上
+            avgInc = (upA * 1 + upB * biasVal) / (1 + biasVal);
+            if (avgInc <= 0) avgInc = 1;
+        } else {
+            avgInc = Math.max(0.1, parseFloat(document.getElementById(`fixedUp${i}_${id}`).value) || 1);
+        }
+        targets[i] = { id: i, hitsNeeded: Math.ceil(tarVal / avgInc), isC: isC, prob: pRoll, avgInc: avgInc };
+    }
 
     let hardDist = {0: 1.0};
     for(let i=0; i<nH; i++){
@@ -258,89 +238,65 @@ function calc(id) {
         hardDist = tmp;
     }
 
-    let targets = {};
-    for(let i=1; i<=attrCount; i++) {
-        let rMin = parseFloat(document.getElementById(`rollMin${i}_${id}`).value)/100, 
-            rMax = parseFloat(document.getElementById(`rollMax${i}_${id}`).value)/100;
-        let pRoll = rMin + (pot/5)*(rMax - rMin);
-        let cur = parseFloat(document.getElementById(`cur${i}_${id}`).value), 
-            tar = parseFloat(document.getElementById(`tar${i}_${id}`).value);
-        let useBias = document.getElementById(`useBias${i}_${id}`).checked;
-        let avgInc = 1;
-        if(useBias) {
-            let bias = parseFloat(document.getElementById(`bias${i}_${id}`).value), 
-                upA = parseFloat(document.getElementById(`upA${i}_${id}`).value), 
-                upB = parseFloat(document.getElementById(`upB${i}_${id}`).value);
-            avgInc = (bias + 1) > 0 ? (upA * bias + upB) / (bias + 1) : upB;
-            if (avgInc <= 0) avgInc = 1;
-        } else {
-            avgInc = parseFloat(document.getElementById(`fixedUp${i}_${id}`).value) || 1;
-        }
-        targets[i] = { 
-            id: i,
-            hitsNeeded: tar > cur ? Math.ceil((tar - cur) / avgInc) : 0, 
-            isC: document.getElementById(`isC${i}_${id}`).checked, 
-            prob: pRoll 
-        };
-    }
-
+    let survivalProb = Math.pow(0.25, nC);
+    let cMaxTries = nC * 4;
     let hitHtml = "";
-    let maxTries = nS + (nH*2) + (nC*4);
-    if (maxTries === 0) {
-        document.getElementById(`hit_result_${id}`).innerHTML = "請輸入蠟的數量";
+    let maxPossibleTries = nS + (nH * 2) + cMaxTries;
+
+    if (maxPossibleTries === 0) {
+        document.getElementById(`hit_result_${id}`).innerHTML = "Please enter wax amount";
         document.getElementById(`res_${id}`).style.display = 'block';
         return;
     }
 
     const baseAttr = targets[1]; 
 
-    for (let t = 1; t <= maxTries; t++) {
+    for (let t = 1; t <= maxPossibleTries; t++) {
         let totalProbMatch = 0;
-        for(let hAtt in hardDist) {
-            let nMax = nS + parseInt(hAtt), cMax = nC * 4, hW = hardDist[hAtt] * Math.pow(0.25, nC);
-            for(let k1 = 0; k1 <= nMax; k1++) {
-                let pK1 = comb(nMax, k1) * Math.pow(baseAttr.prob, k1) * Math.pow(1-baseAttr.prob, nMax - k1);
-                for(let k2 = 0; k2 <= cMax; k2++) {
-                    if (k1 + k2 >= t) {
-                        let pK2 = comb(cMax, k2) * Math.pow(baseAttr.prob, k2) * Math.pow(1-baseAttr.prob, cMax - k2);
-                        totalProbMatch += hW * pK1 * pK2;
-                    }
+        for(let hHits in hardDist) {
+            let nMax = nS + parseInt(hHits); 
+            let hWeight = hardDist[hHits];
+            let effectiveTries = baseAttr.isC ? cMaxTries : (nMax + cMaxTries);
+            
+            if (effectiveTries >= t) {
+                let probAtLeastT = 0;
+                for (let k = t; k <= effectiveTries; k++) {
+                    probAtLeastT += comb(effectiveTries, k) * Math.pow(baseAttr.prob, k) * Math.pow(1 - baseAttr.prob, effectiveTries - k);
                 }
+                totalProbMatch += hWeight * probAtLeastT * survivalProb;
             }
         }
 
-        if (totalProbMatch > 1e-18) {
+        if (totalProbMatch > 1e-25) {
             let matchedAttrs = Object.keys(targets).map(idx => targets[idx]).filter(a => a.hitsNeeded === t);
             let tagsHtml = "";
             matchedAttrs.forEach(a => {
-                tagsHtml += `<div class="line-tag tag-a${a.id}">${a.id}</div>`;
+                tagsHtml += `<div class="line-tag tag-a${a.id}">${a.id}${a.isC ? 'C' : ''}</div>`;
             });
             
             let tries = 1 / totalProbMatch;
             let attrDetails = Object.keys(targets).map(idx => {
                 let a = targets[idx];
-                // 移除 .00，將機率格式化
-                let probDisplay = (a.prob * 100).toFixed(2).replace(/\.00$/, "");
-                return `屬性 ${idx}: ${probDisplay}%`;
+                return `Attr ${idx}: Success x${a.hitsNeeded} (~${(a.hitsNeeded * a.avgInc).toFixed(2)} val)`;
             }).join(' | ');
 
-            let costString = unitCost > 0 ? ` | 成本: <span class="cost-val">${formatUnit(tries * unitCost)}</span>` : "";
+            let costString = unitCost > 0 ? ` | Cost: <span class="cost-val">${formatUnit(tries * unitCost)}</span>` : "";
 
             hitHtml += `
             <div class="res-item ${matchedAttrs.length>0?'target-highlight':''}">
                 <div class="tag-container">${tagsHtml}</div>
                 <div class="res-main">
-                    <span><b>${t}</b> 次</span>
+                    <span><b>${t}</b> Successes</span>
                     <span class="val">${formatProb(totalProbMatch, id)}</span>
                 </div>
                 <div class="res-sub">
-                    每 ${formatUnit(tries)} 個${costString}
+                    Avg: ${formatUnit(tries)} units${costString}
                     <div class="attr-info-line">${attrDetails}</div>
                 </div>
             </div>`;
         }
     }
-    document.getElementById(`hit_result_${id}`).innerHTML = hitHtml || "機率過低或無效數據";
+    document.getElementById(`hit_result_${id}`).innerHTML = hitHtml || "No viable results found";
     document.getElementById(`res_${id}`).style.display = 'block';
 }
 
