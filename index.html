@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSS Precision Calculator</title>
+    <title>BSS Precision Calculator - Joint Competition</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; padding: 10px; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .top-bar { width: 95%; max-width: 1220px; display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 25px; background: #1e1e1e; padding: 15px 25px; border-radius: 12px; border: 1px solid #333; box-sizing: border-box; }
@@ -27,6 +27,9 @@
         .btn-reset { background: #444; }
         .btn-mode { background: #673ab7; }
         .result-box { margin-top: 20px; display: none; }
+        /* 綜合機率樣式 */
+        .joint-res { background: #2c3e50; border: 1px solid #f1c40f; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .joint-val { color: #f1c40f; font-size: 20px; font-weight: bold; margin: 5px 0; }
         .res-section { background: #252525; padding: 15px; border-radius: 8px; border: 1px solid #444; }
         .res-item { display: flex; flex-direction: column; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #333; position: relative; transition: 0.3s; }
         .target-highlight { border-color: #f1c40f !important; background: rgba(241, 196, 15, 0.08); }
@@ -35,11 +38,10 @@
         .tag-a1 { background: #2196f3; }
         .tag-a2 { background: #4caf50; }
         .tag-a3 { background: #9c27b0; }
-        .res-main { display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
-        .res-sub { font-size: 11px; color: #aaa; text-align: right; margin-top: 8px; line-height: 1.5; }
+        .res-main { display: flex; justify-content: space-between; font-size: 14px; align-items: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 5px; }
+        .attr-info-line { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 2px; }
         .val { color: #4caf50; font-weight: bold; }
         .cost-val { color: #f1c40f; font-weight: bold; }
-        .attr-info-line { font-size: 10px; color: #888; border-top: 1px solid #333; margin-top: 5px; padding-top: 5px; }
         .count-select { width: 70px; padding: 8px; background: #333; border: 1px solid #444; color: white; cursor: pointer; }
     </style>
 </head>
@@ -90,8 +92,8 @@ function createCalculatorHTML(id) {
                 </div></div>
                 <div><label>Attr Count</label>
                     <select id="attr_count_${id}" onchange="renderAttrInputs(${id})">
-                        <option value="1" selected>1 Attr</option>
-                        <option value="2">2 Attrs</option>
+                        <option value="1">1 Attr</option>
+                        <option value="2" selected>2 Attrs</option>
                         <option value="3">3 Attrs</option>
                     </select>
                 </div>
@@ -108,6 +110,7 @@ function createCalculatorHTML(id) {
         </div>
 
         <div id="res_${id}" class="result-box">
+            <div id="joint_container_${id}"></div>
             <div class="res-section"><div id="hit_result_${id}"></div></div>
         </div>
     </div>`;
@@ -129,46 +132,46 @@ function renderAttrInputs(calcId) {
                 <div><label>Chance % (Min/Max)</label><div style="display:flex;gap:2px;">
                     <input type="number" id="rollMin${i}_${calcId}" value="0" step="0.1" min="0"><input type="number" id="rollMax${i}_${calcId}" value="0" step="0.1" min="0">
                 </div></div>
-                <div><label>Target Value (Remaining)</label>
+                <div><label>Target Value</label>
                     <input type="number" id="tar_${i}_${calcId}" value="1" min="0">
                 </div>
             </div>
             <div id="biasArea${i}_${calcId}" class="grid" style="margin-top:8px; display:none;">
-                <div><label>Bias</label><input type="number" id="bias${i}_${calcId}" value="2" min="0"></div>
-                <div><label>Bias Inc (upB)</label><input type="number" id="upB${i}_${calcId}" value="2" min="0"></div>
-                <div><label>Lucky Inc (upA)</label><input type="number" id="upA${i}_${calcId}" value="1" min="0"></div>
+                <div><label>Bias</label><input type="number" id="bias${i}_${calcId}" value="1"></div>
+                <div><label>Bias Inc</label><input type="number" id="upB${i}_${calcId}" value="1"></div>
+                <div><label>Lucky Inc</label><input type="number" id="upA${i}_${calcId}" value="2"></div>
             </div>
             <div id="noBiasArea${i}_${calcId}" class="grid" style="margin-top:8px;">
-                <div style="grid-column: span 3;"><label>Success Increment</label><input type="number" id="fixedUp${i}_${calcId}" value="1" step="0.1" min="0"></div>
+                <div style="grid-column: span 3;"><label>Success Increment</label><input type="number" id="fixedUp${i}_${calcId}" value="1"></div>
             </div>
         </div>`;
     }
 }
 
-function toggleBiasView(attrIdx, calcId) {
-    const isChecked = document.getElementById(`useBias${attrIdx}_${calcId}`).checked;
-    document.getElementById(`biasArea${attrIdx}_${calcId}`).style.display = isChecked ? 'grid' : 'none';
-    document.getElementById(`noBiasArea${attrIdx}_${calcId}`).style.display = isChecked ? 'none' : 'grid';
+function toggleBiasView(i, id) {
+    const b = document.getElementById(`useBias${i}_${id}`).checked;
+    document.getElementById(`biasArea${i}_${id}`).style.display = b ? 'grid' : 'none';
+    document.getElementById(`noBiasArea${i}_${id}`).style.display = b ? 'none' : 'grid';
 }
 
-function comb(n, k) {
-    if (k < 0 || k > n) return 0;
-    if (k === 0 || k === n) return 1;
-    if (k > n / 2) k = n - k;
-    let r = 1;
-    for (let i = 1; i <= k; i++) r = r * (n - i + 1) / i;
-    return r;
+function fact(n) { if(n<=1) return 1; let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
+function getMultinomial(n, k_arr, p_arr) {
+    let coeff = fact(n);
+    let prob = 1.0;
+    for(let i=0; i<k_arr.length; i++) {
+        coeff /= fact(k_arr[i]);
+        prob *= Math.pow(p_arr[i], k_arr[i]);
+    }
+    return coeff * prob;
 }
 
 function formatUnit(num) {
     if (num < 1000) return Math.round(num).toString();
     const units = ["", "k", "m", "b", "t"];
-    let unitIdx = 0;
-    while (num >= 1000 && unitIdx < units.length - 1) {
-        num /= 1000;
-        unitIdx++;
-    }
-    return num.toFixed(num < 10 ? 2 : 1).replace(/\.0$/, "") + units[unitIdx];
+    let i = 0;
+    while (num >= 1000 && i < units.length - 1) { num /= 1000; i++; }
+    return num.toFixed(num < 10 ? 2 : 1).replace(/\.0$/, "") + units[i];
 }
 
 function formatProb(p, calcId) {
@@ -181,15 +184,7 @@ function formatProb(p, calcId) {
     return m ? s.substring(0, m.index + 3) + "%" : "0%";
 }
 
-function resetCalc(id) { 
-    renderAttrInputs(id); 
-    document.getElementById(`pot_${id}`).value = 5;
-    document.getElementById(`nS_${id}`).value = 0;
-    document.getElementById(`nH_${id}`).value = 0;
-    document.getElementById(`nC_${id}`).value = 0;
-    document.getElementById(`unit_cost_${id}`).value = 0;
-    document.getElementById(`res_${id}`).style.display = 'none';
-}
+function resetCalc(id) { initCalculators(); }
 
 function toggleMode(id) { 
     displayModes[id] = (displayModes[id] + 1) % 3; 
@@ -198,105 +193,108 @@ function toggleMode(id) {
 }
 
 function calc(id) {
-    const pot = Math.max(0, parseFloat(document.getElementById(`pot_${id}`).value));
-    const nS = Math.max(0, parseInt(document.getElementById(`nS_${id}`).value)||0), 
-          nH = Math.max(0, parseInt(document.getElementById(`nH_${id}`).value)||0), 
-          nC = Math.max(0, parseInt(document.getElementById(`nC_${id}`).value)||0);
-    const unitCost = Math.max(0, parseFloat(document.getElementById(`unit_cost_${id}`).value)||0);
+    const pot = parseFloat(document.getElementById(`pot_${id}`).value);
+    const nS = parseInt(document.getElementById(`nS_${id}`).value)||0, 
+          nH = parseInt(document.getElementById(`nH_${id}`).value)||0, 
+          nC = parseInt(document.getElementById(`nC_${id}`).value)||0;
+    const unitCost = parseFloat(document.getElementById(`unit_cost_${id}`).value)||0;
     const attrCount = parseInt(document.getElementById(`attr_count_${id}`).value);
 
-    let targets = {};
+    let attrs = [];
     for(let i=1; i<=attrCount; i++) {
-        let rMin = Math.max(0, parseFloat(document.getElementById(`rollMin${i}_${id}`).value)/100), 
-            rMax = Math.max(0, parseFloat(document.getElementById(`rollMax${i}_${id}`).value)/100);
-        let pRoll = rMin + (pot/5)*(rMax - rMin);
-        let tarVal = Math.max(0, parseFloat(document.getElementById(`tar_${i}_${id}`).value));
-        let useBias = document.getElementById(`useBias${i}_${id}`).checked;
-        let isC = document.getElementById(`isC${i}_${id}`).checked;
-        let avgInc = 1;
-        if(useBias) {
-            let biasVal = Math.max(0, parseFloat(document.getElementById(`bias${i}_${id}`).value));
-            let upB = Math.max(0, parseFloat(document.getElementById(`upB${i}_${id}`).value)); // Bias (Weighted)
-            let upA = Math.max(0, parseFloat(document.getElementById(`upA${i}_${id}`).value)); // Lucky (Single)
-            // 邏輯維持：Bias 權重掛在 upB 上
-            avgInc = (upA * 1 + upB * biasVal) / (1 + biasVal);
-            if (avgInc <= 0) avgInc = 1;
-        } else {
-            avgInc = Math.max(0.1, parseFloat(document.getElementById(`fixedUp${i}_${id}`).value) || 1);
-        }
-        targets[i] = { id: i, hitsNeeded: Math.ceil(tarVal / avgInc), isC: isC, prob: pRoll, avgInc: avgInc };
+        let rMin = parseFloat(document.getElementById(`rollMin${i}_${id}`).value)/100, 
+            rMax = parseFloat(document.getElementById(`rollMax${i}_${id}`).value)/100;
+        let p = rMin + (pot/5)*(rMax - rMin);
+        let tar = parseFloat(document.getElementById(`tar_${i}_${id}`).value);
+        let useB = document.getElementById(`useBias${i}_${id}`).checked;
+        let inc = useB ? (2*1 + 1*parseFloat(document.getElementById(`bias${i}_${id}`).value))/(1+parseFloat(document.getElementById(`bias${i}_${id}`).value)) : parseFloat(document.getElementById(`fixedUp${i}_${id}`).value);
+        attrs.push({ id: i, p: p, hitsNeeded: Math.ceil(tar/inc), isC: document.getElementById(`isC${i}_${id}`).checked, avgInc: inc });
     }
 
     let hardDist = {0: 1.0};
     for(let i=0; i<nH; i++){
         let tmp = {};
-        for(let c in hardDist){ 
-            let n = parseInt(c); 
-            tmp[n+2] = (tmp[n+2]||0) + hardDist[c]*0.6; 
-            tmp[n] = (tmp[n]||0) + hardDist[c]*0.4; 
-        }
+        for(let c in hardDist){ let n = parseInt(c); tmp[n+2] = (tmp[n+2]||0) + hardDist[c]*0.6; tmp[n] = (tmp[n]||0) + hardDist[c]*0.4; }
         hardDist = tmp;
     }
 
     let survivalProb = Math.pow(0.25, nC);
-    let cMaxTries = nC * 4;
-    let hitHtml = "";
-    let maxPossibleTries = nS + (nH * 2) + cMaxTries;
+    let cMax = nC * 4;
+    let maxTotal = nS + nH*2 + cMax;
+    let jointTotalProb = 0;
+    let singleAttrRowProbs = Array(maxTotal + 1).fill(0).map(() => Array(attrCount).fill(0));
 
-    if (maxPossibleTries === 0) {
-        document.getElementById(`hit_result_${id}`).innerHTML = "Please enter wax amount";
-        document.getElementById(`res_${id}`).style.display = 'block';
-        return;
-    }
+    for (let extra in hardDist) {
+        let nExtra = parseInt(extra);
+        let hWeight = hardDist[extra];
+        let totalPool = nS + nExtra + cMax;
 
-    const baseAttr = targets[1]; 
+        // 生成所有可能的名額分配 (k1, k2, k3, kFail)
+        for (let k1 = 0; k1 <= totalPool; k1++) {
+            if (attrs[0].isC && k1 > cMax) continue;
+            for (let k2 = 0; k2 <= (attrCount >= 2 ? totalPool - k1 : 0); k2++) {
+                if (attrCount >= 2 && attrs[1].isC && k2 > cMax) continue;
+                for (let k3 = 0; k3 <= (attrCount >= 3 ? totalPool - k1 - k2 : 0); k3++) {
+                    if (attrCount >= 3 && attrs[2].isC && k3 > cMax) continue;
 
-    for (let t = 1; t <= maxPossibleTries; t++) {
-        let totalProbMatch = 0;
-        for(let hHits in hardDist) {
-            let nMax = nS + parseInt(hHits); 
-            let hWeight = hardDist[hHits];
-            let effectiveTries = baseAttr.isC ? cMaxTries : (nMax + cMaxTries);
-            
-            if (effectiveTries >= t) {
-                let probAtLeastT = 0;
-                for (let k = t; k <= effectiveTries; k++) {
-                    probAtLeastT += comb(effectiveTries, k) * Math.pow(baseAttr.prob, k) * Math.pow(1 - baseAttr.prob, effectiveTries - k);
+                    let kFail = totalPool - k1 - k2 - k3;
+                    let k_arr = [k1]; if(attrCount>=2) k_arr.push(k2); if(attrCount>=3) k_arr.push(k3); k_arr.push(kFail);
+                    let p_arr = [attrs[0].p]; if(attrCount>=2) p_arr.push(attrs[1].p); if(attrCount>=3) p_arr.push(attrs[2].p);
+                    let sumP = p_arr.reduce((a,b)=>a+b, 0);
+                    p_arr.push(Math.max(0, 1 - sumP));
+
+                    let pCombo = getMultinomial(totalPool, k_arr, p_arr) * hWeight * survivalProb;
+                    
+                    // 統計單屬性機率
+                    if (k1 > 0) for(let t=1; t<=k1; t++) singleAttrRowProbs[t][0] += pCombo;
+                    if (attrCount>=2 && k2 > 0) for(let t=1; t<=k2; t++) singleAttrRowProbs[t][1] += pCombo;
+                    if (attrCount>=3 && k3 > 0) for(let t=1; t<=k3; t++) singleAttrRowProbs[t][2] += pCombo;
+
+                    // 統計綜合機率
+                    let metAll = (k1 >= attrs[0].hitsNeeded);
+                    if(attrCount>=2) metAll = metAll && (k2 >= attrs[1].hitsNeeded);
+                    if(attrCount>=3) metAll = metAll && (k3 >= attrs[2].hitsNeeded);
+                    if(metAll) jointTotalProb += pCombo;
                 }
-                totalProbMatch += hWeight * probAtLeastT * survivalProb;
             }
         }
+    }
 
-        if (totalProbMatch > 1e-25) {
-            let matchedAttrs = Object.keys(targets).map(idx => targets[idx]).filter(a => a.hitsNeeded === t);
-            let tagsHtml = "";
-            matchedAttrs.forEach(a => {
-                tagsHtml += `<div class="line-tag tag-a${a.id}">${a.id}${a.isC ? 'C' : ''}</div>`;
-            });
-            
-            let tries = 1 / totalProbMatch;
-            let attrDetails = Object.keys(targets).map(idx => {
-                let a = targets[idx];
-                return `Attr ${idx}: Success x${a.hitsNeeded} (~${(a.hitsNeeded * a.avgInc).toFixed(2)} val)`;
-            }).join(' | ');
+    // 渲染綜合機率
+    let jointHtml = `
+        <div class="joint-res">
+            <div style="font-size:11px; color:#f1c40f;">ALL TARGETS MET (Joint Prob)</div>
+            <div class="joint-val">${formatProb(jointTotalProb, id)}</div>
+            <div style="font-size:11px; color:#aaa;">
+                Avg Cost: ${jointTotalProb > 0 ? formatUnit(1/jointTotalProb) : 'Inf'} units
+                ${unitCost > 0 ? ` | <span class="cost-val">${formatUnit(unitCost/jointTotalProb)}</span> total` : ''}
+            </div>
+        </div>`;
+    document.getElementById(`joint_container_${id}`).innerHTML = jointHtml;
 
-            let costString = unitCost > 0 ? ` | Cost: <span class="cost-val">${formatUnit(tries * unitCost)}</span>` : "";
+    // 渲染詳細成功列表
+    let hitHtml = "";
+    for (let t = 1; t <= maxTotal; t++) {
+        let matched = attrs.filter(a => a.hitsNeeded === t);
+        let lines = attrs.map((a, idx) => `
+            <div class="attr-info-line">
+                <span style="color:${['','#2196f3','#4caf50','#9c27b0'][a.id]}">Attr ${a.id}${a.isC?'(C)':''}: ${singleAttrRowProbs[t][idx] > 0 ? formatProb(singleAttrRowProbs[t][idx], id) : 'N/A'}</span>
+                <span>~${(t * a.avgInc).toFixed(2)} val</span>
+            </div>
+        `).join('');
 
+        if (attrs.some(a => singleAttrRowProbs[t][a.id-1] > 0)) {
             hitHtml += `
-            <div class="res-item ${matchedAttrs.length>0?'target-highlight':''}">
-                <div class="tag-container">${tagsHtml}</div>
+            <div class="res-item ${matched.length>0?'target-highlight':''}">
+                <div class="tag-container">${matched.map(a => `<div class="line-tag tag-a${a.id}">${a.id}${a.isC?'C':''}</div>`).join('')}</div>
                 <div class="res-main">
                     <span><b>${t}</b> Successes</span>
-                    <span class="val">${formatProb(totalProbMatch, id)}</span>
                 </div>
-                <div class="res-sub">
-                    Avg: ${formatUnit(tries)} units${costString}
-                    <div class="attr-info-line">${attrDetails}</div>
-                </div>
+                ${lines}
             </div>`;
         }
     }
-    document.getElementById(`hit_result_${id}`).innerHTML = hitHtml || "No viable results found";
+    document.getElementById(`hit_result_${id}`).innerHTML = hitHtml;
     document.getElementById(`res_${id}`).style.display = 'block';
 }
 
